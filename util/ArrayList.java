@@ -110,11 +110,13 @@ public class ArrayList<E> extends AbstractList<E>
 
     /**
      * Default initial capacity.
+     * 默认初始容量大小
      */
     private static final int DEFAULT_CAPACITY = 10;
 
     /**
      * Shared empty array instance used for empty instances.
+     * 空数组（用于空实例）
      */
     private static final Object[] EMPTY_ELEMENTDATA = {};
 
@@ -122,6 +124,11 @@ public class ArrayList<E> extends AbstractList<E>
      * Shared empty array instance used for default sized empty instances. We
      * distinguish this from EMPTY_ELEMENTDATA to know how much to inflate when
      * first element is added.
+     * 用于默认大小空实例的共享空数组实例。我们把它从EMPTY_ELEMENTDATA数组中区分出来，以知道在添加第一个元素时容量需要增加多少。
+     *
+     * 笔记：
+     * 使用默认构造函数则 this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+     * 使用另外两种含参构造函数，如果出现需要新建空列表的情况，一律使用上面的EMPTY_ELEMENTDATA
      */
     private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
 
@@ -130,11 +137,22 @@ public class ArrayList<E> extends AbstractList<E>
      * The capacity of the ArrayList is the length of this array buffer. Any
      * empty ArrayList with elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA
      * will be expanded to DEFAULT_CAPACITY when the first element is added.
+     * 数组缓存。我们把ArrayList的元素存到这个数组缓存里。
+     * ArrayList的容量（capacity）是这个数组缓存的长度。
+     * 任何 elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA 的ArrayList，在第一个元素被添加后，都会被扩展至DEFAULT_CAPACITY。
+     *
+     * 笔记：
+     * 1. 第一个元素被添加后扩展，详见 ensureCapacityInternal() 方法。
+     *
+     * 2. transient关键字：https://www.cnblogs.com/lanxuezaipiao/p/3369962.html
+     * java 的transient关键字为我们提供了便利，你只需要实现Serilizable接口，将不需要序列化的属性前添加关键字transient，序列化对象的时候，
+     * 这个属性就不会序列化到指定的目的地中。
      */
     transient Object[] elementData; // non-private to simplify nested class access
 
     /**
      * The size of the ArrayList (the number of elements it contains).
+     * ArrayList 所包含的元素个数
      *
      * @serial
      */
@@ -142,6 +160,11 @@ public class ArrayList<E> extends AbstractList<E>
 
     /**
      * Constructs an empty list with the specified initial capacity.
+     * 带初始容量参数的构造函数（用户可以在创建ArrayList对象时自己指定集合的初始大小）
+     *
+     * 笔记：
+     * 1. 这不是默认构造函数，所以如果初始容量为0，this.elementData 会被赋值为 EMPTY_ELEMENTDATA
+     * 如果初始容量不为0，则创建具有初始容量大小的Object数组
      *
      * @param  initialCapacity  the initial capacity of the list
      * @throws IllegalArgumentException if the specified initial capacity
@@ -160,6 +183,10 @@ public class ArrayList<E> extends AbstractList<E>
 
     /**
      * Constructs an empty list with an initial capacity of ten.
+     * 默认无参构造函数
+     *
+     * 笔记：
+     * 1. DEFAULTCAPACITY_EMPTY_ELEMENTDATA 为 {} 。也就是说初始其实是空数组，当添加第一个元素的时候数组容量才变成10。
      */
     public ArrayList() {
         this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
@@ -169,6 +196,17 @@ public class ArrayList<E> extends AbstractList<E>
      * Constructs a list containing the elements of the specified
      * collection, in the order they are returned by the collection's
      * iterator.
+     * 构造一个包含指定集合的元素的列表，按照它们由集合的迭代器返回的顺序。
+     *
+     * 笔记：
+     * 1. c.toArray() 有可能不会返回Object[]，在此时使用Arrays.copyOf()方法进行类型转换
+     * 这不是默认构造函数，所以如果初始集合元素个数为0，this.elementData 会被赋值为 EMPTY_ELEMENTDATA
+     *
+     * 调用：
+     * Arrays.copyOf()方法：
+     * public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType)
+     * 其内部调用了System.arraycopy()方法：
+     * System.arraycopy(original, 0, copy, 0, Math.min(original.length, newLength));
      *
      * @param c the collection whose elements are to be placed into this list
      * @throws NullPointerException if the specified collection is null
@@ -189,6 +227,15 @@ public class ArrayList<E> extends AbstractList<E>
      * Trims the capacity of this <tt>ArrayList</tt> instance to be the
      * list's current size.  An application can use this operation to minimize
      * the storage of an <tt>ArrayList</tt> instance.
+     * 修改这个ArrayList实例的容量（capacity）为列表的当前大小（size）。应用程序可以使用此操作来最小化ArrayList实例的存储。
+     *
+     * 笔记：
+     * 1. 同样，如果容量将变为0，则赋值为EMPTY_ELEMENTDATA
+     *
+     * 2. 如果size不为0，则调用了另一种不带newType参数的Arrays.copyOf()方法。
+     * 仅仅复制elementData这个数组的前size个元素，因为之后的元素均为空。这样子，elementData数组从原来长度为capacity变为长度为size。
+     *
+     * 3. TODO: modCount
      */
     public void trimToSize() {
         modCount++;
@@ -199,10 +246,26 @@ public class ArrayList<E> extends AbstractList<E>
         }
     }
 
+
+    /*
+     * 扩容部分开始
+     */
+
     /**
      * Increases the capacity of this <tt>ArrayList</tt> instance, if
      * necessary, to ensure that it can hold at least the number of elements
      * specified by the minimum capacity argument.
+     * 如有必要，增加此ArrayList实例的容量，以确保它至少能容纳元素的数量。
+     *
+     * 笔记：
+     * 1. minExpand指通过ArrayList的固有属性（即通过默认构造函数将容量置为10）能够拥有的容量大小。
+     * minCapacity指我要求的容量大小。
+     * 如果我要求的容量大于这个固有大小，则调用扩容函数。
+     *
+     * 2. 如果此时elementData为DEFAULTCAPACITY_EMPTY_ELEMENTDATA，即默认构造函数创建的数组，则赋minExpand为10；
+     * 其他情况下，minExpand均赋为0。
+     *
+     * 3. 如果传入参数大于minExpand，则调用ensureExplicitCapacity()方法。
      *
      * @param   minCapacity   the desired minimum capacity
      */
@@ -219,6 +282,19 @@ public class ArrayList<E> extends AbstractList<E>
         }
     }
 
+    /**
+     * 笔记：
+     * 这个方法被ArrayList类中众多方法调用进行扩容。传入参数为方法要求的最小容量大小。
+     *
+     * 1. 如果elementData还是经由默认构造函数创建的空数组，则不管要求多少，扩容后最小容量大小至少为10。
+     *
+     * 2. 这个函数将调用下面的ensureExplicitCapacity()方法，用来要求扩容。
+     *
+     * 3. 因此，这个函数的主要作用其实就是对于默认构造函数创建的空数组进行扩容后最小容量大小至少为10的限制。
+     * 其它的跟直接调用ensureExplicitCapacity()方法其实没什么差别。
+     *
+     * @param minCapacity   the desired minimum capacity
+     */
     private void ensureCapacityInternal(int minCapacity) {
         if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
             minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
@@ -227,6 +303,13 @@ public class ArrayList<E> extends AbstractList<E>
         ensureExplicitCapacity(minCapacity);
     }
 
+    /**
+     * 笔记：
+     * 1. 判断是否需要扩容。如果我要求的容量大小大于我当前的数组长度，则调用grow()方法。
+     * 一旦调用了grow()方法，说明扩容已经开始！
+     *
+     * @param minCapacity   the desired minimum capacity
+     */
     private void ensureExplicitCapacity(int minCapacity) {
         modCount++;
 
@@ -240,12 +323,21 @@ public class ArrayList<E> extends AbstractList<E>
      * Some VMs reserve some header words in an array.
      * Attempts to allocate larger arrays may result in
      * OutOfMemoryError: Requested array size exceeds VM limit
+     *
+     * 能够拥有的最长ArrayList长度：2147483639
      */
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
     /**
      * Increases the capacity to ensure that it can hold at least the
      * number of elements specified by the minimum capacity argument.
+     * 增加容量使得该ArrayList能够拥有要求的minCapacity数量的元素。
+     * 笔记：
+     * 1. 新容量大小为旧容量大小*1.5，通过位运算实现。
+     * 如果还是不够：那就直接把我要求的minCapacity数量设置为新容量大小。
+     * 如果经过暴力*1.5扩容后，新容量大小超过2147483639：则将要求的minCapacity参数传入hugeCapacity()方法，让它来决定新容量大小。
+     *
+     * 2. 知道了新容量大小后，调用Arrays.copyOf()方法执行扩容。newLength参数设置为newCapacity。
      *
      * @param minCapacity the desired minimum capacity
      */
@@ -261,6 +353,16 @@ public class ArrayList<E> extends AbstractList<E>
         elementData = Arrays.copyOf(elementData, newCapacity);
     }
 
+    /**
+     * 笔记：
+     * 这个方法用来处理经过暴力*1.5扩容后新容量大小过大的情况。
+     *
+     * 1. 如果传入的要求的minCapacity参数大于2147483639，则返回2147483647作为新的容量大小。
+     * 否则，返回2147483639作为新的容量大小。
+     *
+     * @param minCapacity   the desired minimum capacity
+     * @return newCapacity
+     */
     private static int hugeCapacity(int minCapacity) {
         if (minCapacity < 0) // overflow
             throw new OutOfMemoryError();
@@ -269,8 +371,13 @@ public class ArrayList<E> extends AbstractList<E>
                 MAX_ARRAY_SIZE;
     }
 
+    /*
+     * 扩容部分结束
+     */
+
     /**
      * Returns the number of elements in this list.
+     * 返回此列表中的元素数。
      *
      * @return the number of elements in this list
      */
@@ -280,6 +387,7 @@ public class ArrayList<E> extends AbstractList<E>
 
     /**
      * Returns <tt>true</tt> if this list contains no elements.
+     * 如果此列表不包含元素，则返回 true。
      *
      * @return <tt>true</tt> if this list contains no elements
      */
@@ -292,6 +400,11 @@ public class ArrayList<E> extends AbstractList<E>
      * More formally, returns <tt>true</tt> if and only if this list contains
      * at least one element <tt>e</tt> such that
      * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     * 如果此列表包含指定的元素，则返回true 。
+     *
+     * 笔记：
+     *
+     * 1. 这个方法调用了下面的indexOf()方法。如果indexOf()方法能找到该元素（返回值不为-1），则说明包含。
      *
      * @param o element whose presence in this list is to be tested
      * @return <tt>true</tt> if this list contains the specified element
