@@ -84,6 +84,12 @@ public class LinkedList<E>
         extends AbstractSequentialList<E>
         implements List<E>, Deque<E>, Cloneable, java.io.Serializable
 {
+    /**
+     * 笔记：
+     * 1. transient关键字：https://www.cnblogs.com/lanxuezaipiao/p/3369962.html
+     * java 的transient关键字为我们提供了便利，你只需要实现Serilizable接口，将不需要序列化的属性前添加关键字transient，序列化对象的时候，
+     * 这个属性就不会序列化到指定的目的地中。
+     */
     transient int size = 0;
 
     /**
@@ -102,6 +108,7 @@ public class LinkedList<E>
 
     /**
      * Constructs an empty list.
+     * 空构造方法
      */
     public LinkedList() {
     }
@@ -110,6 +117,7 @@ public class LinkedList<E>
      * Constructs a list containing the elements of the specified
      * collection, in the order they are returned by the collection's
      * iterator.
+     * 用已有的集合创建链表的构造方法，根据已有集合迭代器的返回顺序构造。
      *
      * @param  c the collection whose elements are to be placed into this list
      * @throws NullPointerException if the specified collection is null
@@ -121,6 +129,11 @@ public class LinkedList<E>
 
     /**
      * Links e as first element.
+     * 私有方法。将元素添加到链表头部：
+     * 1. （1）头为null，说明链表为空，不仅将first赋为newNode，将last也赋为newNode
+     *    （2）头不为null，说明链表非空，将first赋为newNode后，将原本first的prev指针指向newNode
+     * 2. size++
+     * 3. TODO: modCount
      */
     private void linkFirst(E e) {
         final Node<E> f = first;
@@ -136,6 +149,8 @@ public class LinkedList<E>
 
     /**
      * Links e as last element.
+     * 包访问方法。将元素添加到链表尾部：
+     * 与linkFirst()方法类似
      */
     void linkLast(E e) {
         final Node<E> l = last;
@@ -151,6 +166,13 @@ public class LinkedList<E>
 
     /**
      * Inserts element e before non-null Node succ.
+     * 包访问方法。把一个节点插入到一个非空的后继节点succ之前（succ非空！！）：
+     * 1. 调用了 Node(Node<E> prev, E element, Node<E> next) 方法，使得节点顺序按照 pred, e, succ 顺序排列。
+     * 2. 通过1，我们仅需考虑 pred.next = newNode 和 succ.prev = newNode 这两个指针：
+     *  （1）如果pred为null，不仅将 succ.prev 赋为newNode，将first也赋为newNode
+     *  （2）如果pred不为null，则正常执行 pred.next = newNode 和 succ.prev = newNode
+     *  3. size++
+     *  4. TODO: modCount
      */
     void linkBefore(E e, Node<E> succ) {
         // assert succ != null;
@@ -167,6 +189,13 @@ public class LinkedList<E>
 
     /**
      * Unlinks non-null first node f.
+     * 私有方法。把起始节点f从列表中移除（f为起始节点！！f非空！！）：
+     * 1. 删除内容，斩断next指针
+     * 2. 将起始节点地位让给原先的后一个节点next
+     * 3. （1）如果原先的后一个节点next为空，说明移除后列表为空，则将last也赋为空
+     *    （2）如果原先的后一个节点next非空，说明移除后列表非空，则将 next.prev = null; 说明next节点现在已经是起始节点了
+     * 4. size--
+     * 5. TODO: modCount++
      */
     private E unlinkFirst(Node<E> f) {
         // assert f == first && f != null;
@@ -186,6 +215,8 @@ public class LinkedList<E>
 
     /**
      * Unlinks non-null last node l.
+     * 私有方法。把终止节点f从列表中移除（f为终止节点！！f非空！！）：
+     * 与unlinkFirst()方法类似
      */
     private E unlinkLast(Node<E> l) {
         // assert l == last && l != null;
@@ -205,6 +236,8 @@ public class LinkedList<E>
 
     /**
      * Unlinks non-null node x.
+     * 把节点x从列表中移除（x非空！！）：
+     *
      */
     E unlink(Node<E> x) {
         // assert x != null;
