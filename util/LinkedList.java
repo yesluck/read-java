@@ -548,7 +548,7 @@ public class LinkedList<E>
      * Returns the element at the specified position in this list.
      * 1. 调用checkElementIndex()方法判断index是否在[0, size)。如果不是，IndexOutOfBoundsException。
      * 2. 调用node()方法得到插入位置的内容并返回
-     *      （node()方法进行了分类讨论：如果index在前一半，则从前到后进行查找；否则从后到前进行查找。这样每次查找的最坏情况是size/2次。
+     *      （node()方法进行了分类讨论：如果index在前一半，则从前到后进行查找；否则从后到前进行查找。这样每次查找的最坏情况是size/2次）
      *
      * @param index index of the element to return
      * @return the element at the specified position in this list
@@ -584,6 +584,9 @@ public class LinkedList<E>
      * Inserts the specified element at the specified position in this list.
      * Shifts the element currently at that position (if any) and any
      * subsequent elements to the right (adds one to their indices).
+     * 1. 调用checkPositionIndex()方法判断index是否在[0, size]。如果不是，IndexOutOfBoundsException。
+     * 2. 调用node()方法得到插入位置的节点。
+     * 3. 调用linkLast()方法或linkBefore()方法进行追加或插入操作。
      *
      * @param index index at which the specified element is to be inserted
      * @param element element to be inserted
@@ -602,6 +605,9 @@ public class LinkedList<E>
      * Removes the element at the specified position in this list.  Shifts any
      * subsequent elements to the left (subtracts one from their indices).
      * Returns the element that was removed from the list.
+     * 1. 调用checkElementIndex()方法判断index是否在[0, size)。如果不是，IndexOutOfBoundsException。
+     * 2. 调用node()方法得到插入位置的节点。
+     * 3. 调用unlink()方法进行节点的移除。
      *
      * @param index the index of the element to be removed
      * @return the element previously at the specified position
@@ -614,6 +620,7 @@ public class LinkedList<E>
 
     /**
      * Tells if the argument is the index of an existing element.
+     * 判断index是否在[0, size)
      */
     private boolean isElementIndex(int index) {
         return index >= 0 && index < size;
@@ -622,6 +629,7 @@ public class LinkedList<E>
     /**
      * Tells if the argument is the index of a valid position for an
      * iterator or an add operation.
+     * 判断index是否在[0, size]
      */
     private boolean isPositionIndex(int index) {
         return index >= 0 && index <= size;
@@ -648,6 +656,8 @@ public class LinkedList<E>
 
     /**
      * Returns the (non-null) Node at the specified element index.
+     * 通过遍历查找index索引所对应的元素节点。
+     * 进行分类讨论：如果index在前一半，则从前到后进行查找；否则从后到前进行查找。这样每次查找的最坏情况是size/2次
      */
     Node<E> node(int index) {
         // assert isElementIndex(index);
@@ -673,6 +683,7 @@ public class LinkedList<E>
      * More formally, returns the lowest index {@code i} such that
      * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
      * or -1 if there is no such index.
+     * 返回此列表中指定元素的首次出现的索引，如果此列表不包含此元素，则为-1。
      *
      * @param o element to search for
      * @return the index of the first occurrence of the specified element in
@@ -702,6 +713,7 @@ public class LinkedList<E>
      * More formally, returns the highest index {@code i} such that
      * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
      * or -1 if there is no such index.
+     * 返回此列表中指定元素的最后一次出现的索引，如果此列表不包含元素，则返回-1。
      *
      * @param o element to search for
      * @return the index of the last occurrence of the specified element in
@@ -729,6 +741,7 @@ public class LinkedList<E>
 
     /**
      * Retrieves, but does not remove, the head (first element) of this list.
+     * 返回起始节点的元素内容。如果起始节点为空（列表为空的情况），返回null。
      *
      * @return the head of this list, or {@code null} if this list is empty
      * @since 1.5
@@ -740,6 +753,7 @@ public class LinkedList<E>
 
     /**
      * Retrieves, but does not remove, the head (first element) of this list.
+     * 返回起始节点的元素内容。如果起始节点为空（列表为空的情况），抛出NoSuchElementException。
      *
      * @return the head of this list
      * @throws NoSuchElementException if this list is empty
@@ -751,6 +765,7 @@ public class LinkedList<E>
 
     /**
      * Retrieves and removes the head (first element) of this list.
+     * 返回并移除起始节点的元素内容。如果起始节点为空（列表为空的情况），返回null。
      *
      * @return the head of this list, or {@code null} if this list is empty
      * @since 1.5
@@ -762,6 +777,7 @@ public class LinkedList<E>
 
     /**
      * Retrieves and removes the head (first element) of this list.
+     * 返回并移除起始节点的元素内容。如果起始节点为空（列表为空的情况），抛出NoSuchElementException。
      *
      * @return the head of this list
      * @throws NoSuchElementException if this list is empty
@@ -773,6 +789,7 @@ public class LinkedList<E>
 
     /**
      * Adds the specified element as the tail (last element) of this list.
+     * offer()方法等价于add()方法，即调用linkLast()方法，返回true。
      *
      * @param e the element to add
      * @return {@code true} (as specified by {@link Queue#offer})
@@ -785,6 +802,7 @@ public class LinkedList<E>
     // Deque operations
     /**
      * Inserts the specified element at the front of this list.
+     * offerFirst()方法等价于addFirst()方法，即调用linkFirst()方法，返回true。
      *
      * @param e the element to insert
      * @return {@code true} (as specified by {@link Deque#offerFirst})
@@ -797,6 +815,7 @@ public class LinkedList<E>
 
     /**
      * Inserts the specified element at the end of this list.
+     * offerLast()方法等价于addLast()方法，即调用linkLast()方法，返回true。
      *
      * @param e the element to insert
      * @return {@code true} (as specified by {@link Deque#offerLast})
@@ -810,6 +829,7 @@ public class LinkedList<E>
     /**
      * Retrieves, but does not remove, the first element of this list,
      * or returns {@code null} if this list is empty.
+     * 和peek()方法的实现完全一致。
      *
      * @return the first element of this list, or {@code null}
      *         if this list is empty
@@ -823,6 +843,7 @@ public class LinkedList<E>
     /**
      * Retrieves, but does not remove, the last element of this list,
      * or returns {@code null} if this list is empty.
+     * 将peek()方法实现中的first改为last。
      *
      * @return the last element of this list, or {@code null}
      *         if this list is empty
@@ -836,6 +857,7 @@ public class LinkedList<E>
     /**
      * Retrieves and removes the first element of this list,
      * or returns {@code null} if this list is empty.
+     * 和poll()方法的实现完全一致。
      *
      * @return the first element of this list, or {@code null} if
      *     this list is empty
@@ -849,6 +871,7 @@ public class LinkedList<E>
     /**
      * Retrieves and removes the last element of this list,
      * or returns {@code null} if this list is empty.
+     * 将poll()方法实现中的first改为last。
      *
      * @return the last element of this list, or {@code null} if
      *     this list is empty
@@ -862,6 +885,7 @@ public class LinkedList<E>
     /**
      * Pushes an element onto the stack represented by this list.  In other
      * words, inserts the element at the front of this list.
+     * push()方法等价于addFirst()方法
      *
      * <p>This method is equivalent to {@link #addFirst}.
      *
@@ -875,6 +899,7 @@ public class LinkedList<E>
     /**
      * Pops an element from the stack represented by this list.  In other
      * words, removes and returns the first element of this list.
+     * pop()方法等价于removeFirst()方法
      *
      * <p>This method is equivalent to {@link #removeFirst()}.
      *
@@ -891,6 +916,8 @@ public class LinkedList<E>
      * Removes the first occurrence of the specified element in this
      * list (when traversing the list from head to tail).  If the list
      * does not contain the element, it is unchanged.
+     * removeFirstOccurrence()方法等价于remove()方法：
+     * 从列表中删除指定元素的第一个出现（如果存在）并返回true。如果列表不包含该元素，则它不会更改并返回false。
      *
      * @param o element to be removed from this list, if present
      * @return {@code true} if the list contained the specified element
@@ -904,6 +931,7 @@ public class LinkedList<E>
      * Removes the last occurrence of the specified element in this
      * list (when traversing the list from head to tail).  If the list
      * does not contain the element, it is unchanged.
+     * removeLastOccurrence()方法将remove()方法的实现进行反向，从末到前进行查找。
      *
      * @param o element to be removed from this list, if present
      * @return {@code true} if the list contained the specified element
