@@ -189,7 +189,7 @@ public class LinkedList<E>
 
     /**
      * Unlinks non-null first node f.
-     * 私有方法。把起始节点f从列表中移除（f为起始节点！！f非空！！）：
+     * 私有方法。把起始节点f从列表中移除（f为起始节点！！f非空！！）并返回f的内容：
      * 1. 删除内容，斩断next指针
      * 2. 将起始节点地位让给原先的后一个节点next
      * 3. （1）如果原先的后一个节点next为空，说明移除后列表为空，则将last也赋为空
@@ -215,7 +215,7 @@ public class LinkedList<E>
 
     /**
      * Unlinks non-null last node l.
-     * 私有方法。把终止节点f从列表中移除（f为终止节点！！f非空！！）：
+     * 私有方法。把终止节点f从列表中移除（l为终止节点！！l非空！！）并返回l的内容：
      * 与unlinkFirst()方法类似
      */
     private E unlinkLast(Node<E> l) {
@@ -236,8 +236,17 @@ public class LinkedList<E>
 
     /**
      * Unlinks non-null node x.
-     * 把节点x从列表中移除（x非空！！）：
-     *
+     * 把节点x从列表中移除（x非空！！）并返回x的内容：
+     * 与前两个unlink()方法类似，但是这个不要求是起始或终止节点
+     * 1. 起始节点判断：
+     *      （1）如果x为起始节点，x.prev 本来就为null，因此不需要进行什么多余操作，只需要 first = next 即可。
+     *      （2）反之，需要对 prev 的 next 指针进行修正（至next），并把 x.prev 置为null。
+     * 2. 终止节点判断：
+     *      （1）如果x为终止节点，x.next 本来就为null，因此不需要进行什么多余操作，只需要 last = prev 即可。
+     *      （2）反之，需要对 next 的 prev 指针进行修正（至prev），并把 x.next 置为null。
+     * 3. 删除内容
+     * 4. size--
+     * 5. TODO: modCount++
      */
     E unlink(Node<E> x) {
         // assert x != null;
@@ -267,6 +276,7 @@ public class LinkedList<E>
 
     /**
      * Returns the first element in this list.
+     * 返回起始节点的元素内容。如果null，抛出NoSuchElementException。
      *
      * @return the first element in this list
      * @throws NoSuchElementException if this list is empty
@@ -280,6 +290,7 @@ public class LinkedList<E>
 
     /**
      * Returns the last element in this list.
+     * 返回终止节点的元素内容。如果null，抛出NoSuchElementException。
      *
      * @return the last element in this list
      * @throws NoSuchElementException if this list is empty
@@ -293,6 +304,8 @@ public class LinkedList<E>
 
     /**
      * Removes and returns the first element from this list.
+     * 把起始节点从列表中移除并返回起始节点的内容。
+     * 实现：如果null，抛出NoSuchElementException。否则直接调用unlinkFirst()方法并返回。
      *
      * @return the first element from this list
      * @throws NoSuchElementException if this list is empty
@@ -306,6 +319,8 @@ public class LinkedList<E>
 
     /**
      * Removes and returns the last element from this list.
+     * 把终止节点从列表中移除并返回终止节点的内容。
+     * 实现：如果null，抛出NoSuchElementException。否则直接调用unlinkLast()方法并返回。
      *
      * @return the last element from this list
      * @throws NoSuchElementException if this list is empty
@@ -319,6 +334,7 @@ public class LinkedList<E>
 
     /**
      * Inserts the specified element at the beginning of this list.
+     * 调用linkFirst()方法
      *
      * @param e the element to add
      */
@@ -328,6 +344,7 @@ public class LinkedList<E>
 
     /**
      * Appends the specified element to the end of this list.
+     * 调用linkLast()方法，不返回。
      *
      * <p>This method is equivalent to {@link #add}.
      *
@@ -342,6 +359,10 @@ public class LinkedList<E>
      * More formally, returns {@code true} if and only if this list contains
      * at least one element {@code e} such that
      * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     * 如果此列表包含指定的元素，则返回true 。
+     *
+     * 笔记：
+     * 1. 这个方法调用了下面的indexOf()方法。如果indexOf()方法能找到该元素（返回值不为-1），则说明包含。
      *
      * @param o element whose presence in this list is to be tested
      * @return {@code true} if this list contains the specified element
@@ -352,6 +373,7 @@ public class LinkedList<E>
 
     /**
      * Returns the number of elements in this list.
+     * 返回此列表中的元素数。
      *
      * @return the number of elements in this list
      */
@@ -361,6 +383,7 @@ public class LinkedList<E>
 
     /**
      * Appends the specified element to the end of this list.
+     * 调用linkLast()方法，返回true。
      *
      * <p>This method is equivalent to {@link #addLast}.
      *
@@ -381,6 +404,7 @@ public class LinkedList<E>
      * (if such an element exists).  Returns {@code true} if this list
      * contained the specified element (or equivalently, if this list
      * changed as a result of the call).
+     * 从列表中删除指定元素的第一个出现（如果存在）并返回true。如果列表不包含该元素，则它不会更改并返回false。
      *
      * @param o element to be removed from this list, if present
      * @return {@code true} if this list contained the specified element
@@ -411,6 +435,9 @@ public class LinkedList<E>
      * the specified collection is modified while the operation is in
      * progress.  (Note that this will occur if the specified collection is
      * this list, and it's nonempty.)
+     * 按指定集合的Iterator返回的顺序将指定集合中的所有元素追加到此列表的末尾。
+     * 如果这个加入的集合在操作过程中被修改，那么结果是不确定的。
+     * （例如，如果将自己加入自己，如果自己是非空的，那么结果是不确定的）
      *
      * @param c collection containing elements to be added to this list
      * @return {@code true} if this list changed as a result of the call
@@ -427,6 +454,19 @@ public class LinkedList<E>
      * the right (increases their indices).  The new elements will appear
      * in the list in the order that they are returned by the
      * specified collection's iterator.
+     *
+     * 笔记：
+     * 1. 检查index范围是否在size之内
+     *      （add类方法使用checkPositionIndex()，类似于ArrayList中的rangeCheckForAdd()方法，允许index==size的情况，即在末尾进行添加）
+     * 2. toArray()方法把集合的数据存到对象数组中
+     * 3. 调用node()方法得到插入位置的前驱和后继节点
+     *      （node()方法进行了分类讨论：如果index在前一半，则从前到后进行查找；否则从后到前进行查找。这样每次查找的最坏情况是size/2次。
+     * 4. 遍历数据，将数据插入到指定位置。在此过程中不断向前推进pred节点。
+     *      （这里同样调用了Node<>()构造函数，进行newNode的向前连接，这时只需要将前驱节点的next指向newNode即可）
+     * 5. 最后将pred节点和next节点互相进行连接。
+     * 6. first和last的特殊情况和之前都很类似。
+     * 7. size += numNew;
+     * 8. TODO: modCount++;
      *
      * @param index index at which to insert the first element
      *              from the specified collection
@@ -477,6 +517,12 @@ public class LinkedList<E>
     /**
      * Removes all of the elements from this list.
      * The list will be empty after this call returns.
+     * 清除所有元素。
+     * 1. 将每个元素x的两个指针和储存元素全部置为null。
+     * 2. 不断向前推进x指针。
+     * 3. 把first和last指针都置为null。
+     * 4. size = 0
+     * 5. TODO: modCount++
      */
     public void clear() {
         // Clearing all of the links between nodes is "unnecessary", but:
@@ -500,6 +546,9 @@ public class LinkedList<E>
 
     /**
      * Returns the element at the specified position in this list.
+     * 1. 调用checkElementIndex()方法判断index是否在[0, size)。如果不是，IndexOutOfBoundsException。
+     * 2. 调用node()方法得到插入位置的内容并返回
+     *      （node()方法进行了分类讨论：如果index在前一半，则从前到后进行查找；否则从后到前进行查找。这样每次查找的最坏情况是size/2次。
      *
      * @param index index of the element to return
      * @return the element at the specified position in this list
@@ -513,6 +562,10 @@ public class LinkedList<E>
     /**
      * Replaces the element at the specified position in this list with the
      * specified element.
+     * 1. 调用checkElementIndex()方法判断index是否在[0, size)。如果不是，IndexOutOfBoundsException。
+     * 2. 调用node()方法得到插入位置的原始内容。
+     * 3. 更新为新内容。
+     * 4. 返回原始内容。
      *
      * @param index index of the element to replace
      * @param element element to be stored at the specified position
